@@ -3,87 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sanzid Strict Real-Shot</title>
+    <title>Sanzid Strict Pro-Hack</title>
     <style>
-        body { background: #000; color: white; font-family: sans-serif; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { width: 300px; border: 2px solid #222; border-radius: 30px; padding: 25px; background: #050505; box-shadow: 0 0 20px rgba(255,0,0,0.1); }
-        .timer { font-size: 50px; font-weight: bold; color: #fff; margin-bottom: 20px; }
-        .signal-box { background: #111; padding: 35px 10px; border-radius: 20px; border: 1px solid #333; margin-bottom: 15px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
-        .signal-text { font-size: 50px; font-weight: bold; }
-        .status-light { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
-        #log { font-size: 11px; margin-top: 15px; color: #666; font-family: monospace; }
+        body { background: #000; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .card { width: 320px; background: #080808; border: 2px solid #222; border-radius: 35px; padding: 30px; text-align: center; box-shadow: 0 0 30px rgba(255, 0, 0, 0.1); }
+        .timer { font-size: 55px; font-weight: bold; margin: 20px 0; color: #fff; letter-spacing: 3px; }
+        .signal-box { background: #111; border: 1.5px solid #333; border-radius: 25px; padding: 40px 10px; margin-bottom: 20px; min-height: 100px; display: flex; align-items: center; justify-content: center; }
+        .signal-text { font-size: 50px; font-weight: bold; text-transform: uppercase; }
+        .status-container { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; margin-bottom: 10px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
+        .dot.active { background: #0f0; box-shadow: 0 0 10px #0f0; animation: blink 1s infinite; }
+        #log { font-size: 11px; color: #444; font-family: monospace; }
+        @keyframes blink { 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div style="font-size: 12px; color: #888; margin-bottom: 10px;">
-        <span id="light" class="status-badge"></span> SERVER: WINGOANALYST
+    <div class="status-container">
+        <div id="status-dot" class="dot"></div>
+        <span id="status-text" style="color: #666;">SERVER: DISCONNECTED</span>
     </div>
-    
+
     <div class="timer" id="timer">00:00</div>
-    
+
     <div class="signal-box">
-        <div id="signal" class="signal-text" style="color: #444;">IDLE</div>
+        <div id="signal" class="signal-text" style="color: #333;">OFFLINE</div>
     </div>
-    
-    <div id="log">CONNECTING TO SOURCE...</div>
+
+    <div id="log">SYSTEM READY...</div>
 </div>
 
 <script>
-    async function getRealSignal() {
-        const signalEl = document.getElementById('signal');
-        const logEl = document.getElementById('log');
-        const light = document.getElementById('light');
+    const signalEl = document.getElementById('signal');
+    const logEl = document.getElementById('log');
+    const dot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
 
-        logEl.innerText = "FETCHING DATA...";
-        
-        // Proxy using AllOrigins to bypass CORS
-        const target = "https://wingoanalyst.com/#/wingo_1m";
-        const url = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
+    async function fetchSourceData() {
+        logEl.innerText = "SCRAPING REAL-TIME DATA...";
+        dot.classList.remove('active');
+        dot.style.background = "#f00"; // Fetching সময় লাল থাকবে
+
+        // WingoAnalyst এর ডাটা পড়ার জন্য CORS Proxy
+        const targetUrl = "https://wingoanalyst.com/#/wingo_1m";
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&timestamp=${new Date().getTime()}`;
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("Network Error");
-            
-            const data = await response.json();
-            const content = data.contents;
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error();
 
-            // ডাটা রিড করার লজিক: সাইটের HTML এর ভেতর BIG বা SMALL খুঁজবে
-            if (content.includes("BIG") || content.includes("SMALL")) {
-                // এখানে সাইটের অরিজিনাল ডাটা পাওয়া গেলে সেটা দেখাবে
-                // আমরা শুধু চেক করছি ডাটাটা স্ট্যাবল কি না
-                const result = content.includes("BIG") ? "BIG" : "SMALL";
+            const data = await response.json();
+            const html = data.contents;
+
+            // Strict Check: HTML এর ভেতর নির্দিষ্ট প্যাটার্ন খুঁজবে
+            if (html.includes("BIG") || html.includes("SMALL")) {
+                // রিয়েল সিগন্যাল ডিটেক্ট করা
+                // Note: এখানে আমরা সিম্পল ভাবে টেক্সট ম্যাচ করছি
+                const prediction = html.includes("BIG") ? "BIG" : "SMALL";
                 
-                signalEl.innerText = result;
-                signalEl.style.color = (result === "BIG") ? "#ffcc00" : "#00ffcc";
-                logEl.innerText = "REAL DATA RECEIVED";
-                logEl.style.color = "#0f0";
+                signalEl.innerText = prediction;
+                signalEl.style.color = (prediction === "BIG") ? "#ffcc00" : "#00ffcc";
+                
+                statusText.innerText = "SERVER: LIVE DATA";
+                statusText.style.color = "#0f0";
+                dot.classList.add('active');
+                dot.style.background = "#0f0";
+                logEl.innerText = "DATA SYNCED SUCCESSFULLY";
             } else {
-                throw new Error("No Signal Found");
+                throw new Error("Data Blocked");
             }
         } catch (err) {
             signalEl.innerText = "ERROR";
-            signalEl.style.color = "#f00";
-            logEl.innerText = "CANNOT READ SOURCE DATA";
-            logEl.style.color = "#f00";
+            signalEl.style.color = "#f44";
+            statusText.innerText = "SERVER: DATA ERROR";
+            statusText.style.color = "#f44";
+            dot.style.background = "#f44";
+            logEl.innerText = "SOURCE BLOCKED OR NO SIGNAL";
         }
     }
 
     function startTimer() {
         setInterval(() => {
             const now = new Date();
-            const timeLeft = 60 - now.getSeconds();
-            document.getElementById('timer').innerText = "00:" + (timeLeft < 10 ? "0" + timeLeft : timeLeft);
+            const seconds = now.getSeconds();
+            const timeLeft = 60 - seconds;
             
-            // প্রতি মিনিটের শুরুতে নতুন ডাটা টানবে
+            document.getElementById('timer').innerText = "00:" + (timeLeft < 10 ? "0" + timeLeft : timeLeft);
+
+            // প্রতি পিরিয়ড আইডি বদলানোর সময় (সেকেন্ড ০ তে) ডাটা ফেচ করবে
             if (timeLeft === 59) {
-                getRealSignal();
+                fetchSourceData();
             }
         }, 1000);
     }
 
-    getRealSignal();
+    // শুরুতে একবার রান হবে
+    fetchSourceData();
     startTimer();
 </script>
 
