@@ -2,96 +2,114 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sanzid Strict Collector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sanzid DK-Win Admin</title>
     <style>
-        body { background: #000; color: white; font-family: sans-serif; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { width: 310px; border: 2px solid #222; border-radius: 35px; padding: 30px; background: #080808; }
-        .timer { font-size: 55px; font-weight: bold; color: #fff; margin: 15px 0; }
-        .signal-box { background: #111; padding: 40px 10px; border-radius: 20px; border: 1px solid #333; margin-bottom: 20px; min-height: 100px; display: flex; align-items: center; justify-content: center; }
-        .signal-text { font-size: 50px; font-weight: bold; }
-        .status-info { font-size: 13px; font-weight: bold; margin-bottom: 10px; }
-        #log { font-size: 11px; color: #444; font-family: monospace; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
+        
+        /* মেইন ডিকে-উইন সাইট */
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* ছোট ফ্লোটিং বাটন (ট্রিগার) */
+        #floating-trigger {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 204, 0, 0.8);
+            border-radius: 20px 0 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            cursor: pointer;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.5);
+            transition: 0.3s;
+        }
+
+        /* ম্যানুয়াল সিগন্যাল প্যানেল (শুরুতে হাইড থাকবে) */
+        #admin-panel {
+            position: fixed;
+            top: 20%;
+            right: -320px; /* স্ক্রিনের বাইরে থাকবে */
+            width: 280px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid #ffcc00;
+            border-radius: 20px;
+            padding: 20px;
+            z-index: 1000;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #admin-panel.active {
+            right: 20px; /* ক্লিক করলে ভেতরে আসবে */
+        }
+
+        .timer { font-size: 35px; font-weight: bold; color: #fff; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .signal-display { font-size: 45px; font-weight: bold; margin: 15px 0; border: 2px solid #222; border-radius: 15px; padding: 20px; background: #111; }
+        .btn-group { display: flex; justify-content: space-between; gap: 10px; margin-top: 15px; }
+        .set-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .set-btn:active { transform: scale(0.9); }
+        .big { background: #ffcc00; color: #000; }
+        .small { background: #00ffcc; color: #000; }
+        .close-area { color: #ff4444; font-size: 12px; margin-top: 15px; cursor: pointer; font-weight: bold; display: block; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div id="status" class="status-info" style="color: #666;">● CONNECTING...</div>
-    <div class="timer" id="timer">00:00</div>
-    
-    <div class="signal-box">
-        <div id="signal" class="signal-text" style="color: #444;">IDLE</div>
+    <iframe src="https://dkwin9.com/#/register?invitationCode=74772628440"></iframe>
+
+    <div id="floating-trigger" onclick="togglePanel()">⚡</div>
+
+    <div id="admin-panel">
+        <div class="timer" id="timer">00:00</div>
+        <div style="font-size: 11px; color: #888; text-transform: uppercase;">Next Predicted Signal</div>
+        <div id="signal" class="signal-display" style="color: #444;">WAIT</div>
+        
+        <div class="btn-group">
+            <button class="set-btn big" onclick="updateSignal('BIG')">BIG</button>
+            <button class="set-btn small" onclick="updateSignal('SMALL')">SMALL</button>
+        </div>
+        
+        <span class="close-area" onclick="togglePanel()">[ CLOSE PANEL ]</span>
     </div>
 
-    <div id="vote-data" style="font-size: 14px; color: #ffcc00; font-weight: bold;">--</div>
-    <div id="log">SYSTEM READY</div>
-</div>
-
-<script>
-    async function getRealData() {
-        const signalEl = document.getElementById('signal');
-        const voteEl = document.getElementById('vote-data');
-        const statusEl = document.getElementById('status');
-        const logEl = document.getElementById('log');
-
-        statusEl.innerText = "● FETCHING REAL DATA...";
-        statusEl.style.color = "#ffcc00";
-
-        // Proxy using AllOrigins to bypass CORS
-        const target = "https://wingoanalyst.com/#/wingo_1m";
-        const url = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}&t=${new Date().getTime()}`;
-
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error();
-            
-            const data = await response.json();
-            const content = data.contents;
-
-            // ডাটা খুঁজা হচ্ছে: যদি "BIG" বা "SMALL" টেক্সট কন্টেন্টের ভেতর পাওয়া যায়
-            if (content && (content.includes("BIG") || content.includes("SMALL"))) {
-                // রিয়েল সিগন্যাল ডিটেকশন
-                const prediction = content.includes("BIG") ? "BIG" : "SMALL";
-                
-                signalEl.innerText = prediction;
-                signalEl.style.color = (prediction === "BIG") ? "#ffcc00" : "#00ffcc";
-                
-                // রিয়েল ভোটের একটা সিমুলেটেড ভ্যালু (যদি অরিজিনালটা পাওয়া যায়)
-                voteEl.innerText = "REAL VOTE: 96.4%"; 
-                
-                statusEl.innerText = "● SERVER LIVE";
-                statusEl.style.color = "#0f0";
-                logEl.innerText = "SUCCESSFULLY SYNCED";
-            } else {
-                throw new Error("No Data");
-            }
-        } catch (err) {
-            // ডাটা না পেলে সরাসরি ERROR এবং OFFLINE দেখাবে
-            signalEl.innerText = "ERROR";
-            signalEl.style.color = "#f00";
-            voteEl.innerText = "VOTE: OFFLINE";
-            statusEl.innerText = "● CONNECTION FAILED";
-            statusEl.style.color = "#f00";
-            logEl.innerText = "SOURCE BLOCKED BY SERVER";
+    <script>
+        // প্যানেল ওপেন/ক্লোজ করার ফাংশন
+        function togglePanel() {
+            const panel = document.getElementById('admin-panel');
+            panel.classList.toggle('active');
         }
-    }
 
-    function startTimer() {
-        setInterval(() => {
-            const now = new Date();
-            const timeLeft = 60 - now.getSeconds();
-            document.getElementById('timer').innerText = "00:" + (timeLeft < 10 ? "0" + timeLeft : timeLeft);
-            
-            if (timeLeft === 59) {
-                getRealData();
-            }
-        }, 1000);
-    }
+        // ম্যানুয়ালি সিগন্যাল আপডেট করা
+        function updateSignal(type) {
+            const sigEl = document.getElementById('signal');
+            sigEl.innerText = type;
+            sigEl.style.color = (type === 'BIG') ? '#ffcc00' : '#00ffcc';
+            sigEl.style.textShadow = `0 0 20px ${type === 'BIG' ? '#ffcc0066' : '#00ffcc66'}`;
+        }
 
-    getRealData();
-    startTimer();
-</script>
+        // ১ মিনিটের গেম টাইমার
+        function startTimer() {
+            setInterval(() => {
+                const now = new Date();
+                const timeLeft = 60 - now.getSeconds();
+                document.getElementById('timer').innerText = "00:" + (timeLeft < 10 ? "0" + timeLeft : timeLeft);
+                
+                // পিরিয়ড শেষ হওয়ার ৫ সেকেন্ড আগে সিগন্যাল রিসেট (ঐচ্ছিক)
+                if (timeLeft === 59) {
+                    const sigEl = document.getElementById('signal');
+                    sigEl.style.opacity = "0.3";
+                } else if (timeLeft === 55) {
+                    document.getElementById('signal').style.opacity = "1";
+                }
+            }, 1000);
+        }
 
+        window.onload = startTimer;
+    </script>
 </body>
 </html>
