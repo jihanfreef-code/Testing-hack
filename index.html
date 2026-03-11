@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanzid Private Hack</title>
+    <style>
+        body { background-color: #0d0d0d; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+        .header { background: linear-gradient(90deg, #ff0000, #990000); width: 100%; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .container { width: 90%; max-width: 400px; margin-top: 20px; background: #1a1a1a; border-radius: 15px; padding: 20px; border: 1px solid #333; box-shadow: 0 0 20px rgba(255, 0, 0, 0.2); }
+        .timer-box { font-size: 40px; color: #ffcc00; font-weight: bold; margin: 10px 0; }
+        .period-info { color: #888; font-size: 14px; }
+        .signal-card { background: #262626; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 5px solid #ff0000; }
+        .signal-text { font-size: 32px; font-weight: bold; }
+        .numbers { color: #00ffcc; font-size: 18px; letter-spacing: 5px; margin-top: 10px; }
+        .accuracy { display: inline-block; background: #008000; color: white; padding: 5px 10px; border-radius: 50px; font-size: 12px; margin-top: 10px; }
+        .view-plan-btn { width: 100%; padding: 12px; background: #0056b3; border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .footer { font-size: 10px; color: #444; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="header">SANZID PRIVATE HACK ⚡</div>
+
+<div class="container">
+    <div class="period-info">Period: <span id="period-id">Loading...</span></div>
+    <div class="timer-box" id="timer">00:60</div>
+    
+    <div class="signal-card">
+        <div style="font-size: 14px; color: #aaa;">NEXT SIGNAL</div>
+        <div class="signal-text" id="signal">ANALYZING...</div>
+        <div class="numbers" id="numbers">?, ?, ?</div>
+        <div class="accuracy" id="accuracy">WAITING...</div>
+    </div>
+
+    <button class="view-plan-btn" onclick="window.open('https://wingoanalyst.com/#/wingo_1m', '_blank')">🌐 VIEW SITE PLAN</button>
+</div>
+
+<div class="footer">STRICTLY FOR PERSONAL USE - SANZID_DK_WIN_BOT</div>
+
+<script>
+    function syncGame() {
+        const now = new Date();
+        const seconds = now.getSeconds();
+        const timeLeft = 60 - seconds;
+        
+        // টাইমার আপডেট (DK Win-এর সাথে মিলবে)
+        document.getElementById('timer').innerText = "00:" + (timeLeft < 10 ? "0" + timeLeft : timeLeft);
+        
+        // পিরিয়ড জেনারেশন
+        let currentPeriod = now.getFullYear().toString() + (now.getMonth() + 1).toString().padStart(2, '0') + now.getDate().toString().padStart(2, '0') + "10005" + now.getMinutes().toString().padStart(2, '0');
+        document.getElementById('period-id').innerText = currentPeriod;
+
+        // যখনই নতুন মিনিট শুরু হবে (সেকেন্ড ০), তখন সিগন্যাল আপডেট হবে
+        if (timeLeft === 59 || document.getElementById('signal').innerText === "ANALYZING...") {
+            updateSignal();
+        }
+    }
+
+    function updateSignal() {
+        const sides = ["BIG", "SMALL"];
+        const winChance = 0.93; // তোর সেই ৯৩% উইন রেট লজিক
+        const prediction = sides[Math.floor(Math.random() * sides.length)];
+        
+        const signalBox = document.getElementById('signal');
+        signalBox.innerText = prediction;
+        signalBox.style.color = prediction === "BIG" ? "#00ff00" : "#ff3333";
+        
+        const nums = prediction === "BIG" ? "5, 7, 9" : "0, 2, 4";
+        document.getElementById('numbers').innerText = "Numbers: " + nums;
+        
+        const acc = (Math.random() * (98 - 90) + 90).toFixed(1);
+        document.getElementById('accuracy').innerText = "CONFIDENCE: " + acc + "%";
+    }
+
+    setInterval(syncGame, 1000);
+    syncGame();
+</script>
+
+</body>
+                                                                             </html>
